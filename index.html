@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>First Order Logic</title>
+
+    <!-- Bootstrap -->
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="assets/css/theme.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-inverse navbar-static-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">First order logic</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="index.html">Solve</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <h1>Solve first order logic</h1>
+          <button class="btn btn-default fol-example" data-fol-example="example1">Example 1</button>
+          <button class="btn btn-default fol-example" data-fol-example="example2">Example 2</button>
+          <button class="btn btn-default fol-example" data-fol-example="example3">Example 3</button>
+          <button class="btn btn-default fol-example" data-fol-example="example4">Example 4</button>
+          <button class="btn btn-default fol-example" data-fol-example="example5">Example 5</button>
+          <button class="btn btn-default fol-example" data-fol-example="example6">Example 6</button>
+          <textarea class="form-control" style="height:200px;" id="formula"></textarea>
+          <div>Trace: <input type="checkbox" id="trace" checked="checked"/></div>
+          <div>Max predicates in new clause: <select id="max-predicates">
+            <option value="-1">No limit</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="15">15</option>
+            <option value="20">20</option>
+            <option value="25">25</option>
+          </select></div>
+          <div><button class="btn btn-small btn-primary" id="solve">Solve</button></div>
+          <h2>Console</h2>
+          <div id="console" class="console"></div>
+        </div>
+      </div>
+    </div>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js" type="text/javascript"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="assets/js/bootstrap.min.js" type="text/javascript"></script>
+    <script src="fol/utils.js" type="text/javascript"></script>
+    <script src="fol/fol_solver.js" type="text/javascript"></script>
+    <script src="fol/fol_parser.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      $(function() {
+        FOL.Utils.trace = function(msg){
+          if (FOL.traceOn) $("#console").append("<div>" + msg.replace(/ /g, "&nbsp;").split("\n").join("<br />") + "</div>");
+        }
+/*
+        FOL.Utils.error = function(msg){
+          $("#console").append("<div style='color: #ff0000'>" + msg.replace(/ /g, "&nbsp;").split("\n").join("<br />") + "</div>");
+        }
+*/ 
+        $('#solve').click(function() {
+          var fol_solver = new FOL.FolSolver();
+          FOL.traceOn = $('#trace').prop("checked");
+          $('#console').html("");
+          var input = $('#formula').val();
+          var maxNumberOfPredicatesInNewClause = $('#max-predicates').val();
+
+          var solution = fol_solver.solve(input, maxNumberOfPredicatesInNewClause);
+          if (solution === true) {
+            $("#console").append("<div>Didn't find contradiction</div>");
+          } else if (solution === false) {
+            $("#console").append("<div>Found contradiction</div>");
+          }
+          $("#console").append("<div>Statistics: " + JSON.stringify(fol_solver.getStatistics()) + "</div>");
+        });
+
+        $('.fol-example').click(function() {
+          var exampleId = $(this).data("folExample");
+          $('#formula').val($('#' + exampleId).html().trim());
+        });
+        
+        $('#formula').val($('#example1').html().trim());
+      });
+    </script>
+    <script type="text/fol" id="example1">
+% Example comment
+father(john,mary)
+father(john,jim)
+father(rob,john)
+
+-father(X,Y) | -father(Y,Z) | grandfather(X,Z)
+
+-grandfather(rob,jim)
+    </script>
+    <script type="text/fol" id="example2">
+-alergia(X,Y) | -alergia(X,Z) | -alergia(X,W) | nohu(X)
+alergia(m,k)
+-nohu(m)
+    </script>
+    <script type="text/fol" id="example3">
+p(X,X,X,X)
+-p(Z,Y,Z,Q)
+    </script>
+    <script type="text/fol" id="example4">
+-p(X, Y) | p(f(X), f(Y))
+p(a,b)
+-p(f(a), f(b))
+    </script>
+    <script type="text/fol" id="example5">
+-king(X) | -greedy(X) | evil(X)
+king(father(john))
+greedy(father(john))
+-evil(father(john))
+    </script>
+    <script type="text/fol" id="example6">
+% Equlaity axioms
+eq(X,X)
+-eq(X,Y)|eq(Y,X)
+-eq(X,Y)|-eq(Y,Z)|eq(X,Z)
+
+% Facts
+eq(a,b)
+eq(b,c)
+eq(c,d)
+
+% Question
+-eq(d,a)
+    </script>
+  </body>
+</html>
